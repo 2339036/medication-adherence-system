@@ -1,32 +1,33 @@
+// Import bcrypt for password hashing
 const bcrypt = require("bcryptjs");
+
+// Import JWT for token creation
 const jwt = require("jsonwebtoken");
 
+// Register user (NO database yet)
 exports.register = async (req, res) => {
-  const { email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const { email, password } = req.body;
 
-  res.status(201).json({
-    message: "User registered securely",
-    email,
-    hashedPassword
-  });
-};
+    if (!email || !password) {          // Basic validation
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);     // Hash password
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const isMatch = await bcrypt.compare(password, hashedPassword);
+    const token = jwt.sign(     // Create JWT token
+      { email },                     
+      process.env.JWT_SECRET,        
+      { expiresIn: "24h" }            // token expiry
+    );
 
-  if (!isMatch) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    // Respond with token (simulating successful registration)
+    res.status(201).json({
+      message: "User registered securely",
+      token
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
-
-  const token = jwt.sign(
-    { email },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  res.json({ token });
 };
