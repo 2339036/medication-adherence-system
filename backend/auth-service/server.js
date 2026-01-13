@@ -9,8 +9,6 @@ const app = express();
 
 // Enable CORS middleware
 app.use(cors());
-
-// Allow Express to parse JSON bodies
 app.use(express.json());
 
 // Health check route (VERY IMPORTANT)
