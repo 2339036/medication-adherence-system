@@ -123,37 +123,68 @@ exports.login = async (req, res) => {
 };
 
 // UPDATE PROFILE
-exports.updateProfile = async (req, res) => {   
+exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, password } = req.body; 
+    const { name, email, password } = req.body;
 
-    const updateData = {};
-// Collect fields to update
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-// If password is provided, hash it before updating
+    // Find user by ID from JWT
+    const userIndex = users.findIndex(
+      user => user.id === req.userId
+    );
+
+    if (userIndex === -1) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    // Update name if provided
+    if (name) {
+      users[userIndex].name = name;
+    }
+
+    // Update email if provided
+    if (email) {
+      if (!isValidEmail(email)) {
+        return res.status(400).json({
+          message: "Invalid email format"
+        });
+      }
+
+      // Prevent duplicate email
+      const emailExists = users.some(
+        user => user.email === email && user.id !== req.userId
+      );
+
+      if (emailExists) {
+        return res.status(409).json({
+          message: "Email already in use"
+        });
+      }
+
+      users[userIndex].email = email;
+    }
+
+    // Update password if provided
     if (password) {
       if (password.length < 6) {
         return res.status(400).json({
           message: "Password must be at least 6 characters long"
         });
       }
-      updateData.password = await bcrypt.hash(password, 10);    
+
+      users[userIndex].password = await bcrypt.hash(password, 10);
     }
-// Update user in database
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,            
-      updateData,
-      { new: true }
-    ).select("-password");
-// Return updated user data
+
     res.status(200).json({
-      message: "Profile updated successfully",
-      user: updatedUser
+      message: "Profile updated successfully"
     });
 
   } catch (error) {
     console.error("Update error:", error);
-    res.status(500).json({ message: "Server error during update" });
+    res.status(500).json({
+      message: "Server error during update"
+    });
   }
 };
+
