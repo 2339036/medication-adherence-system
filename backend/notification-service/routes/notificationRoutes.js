@@ -1,4 +1,4 @@
-//this file defines the routes for creating and retrieving medication reminders
+// this file defines the routes for creating and retrieving medication reminders
 const express = require("express");
 const router = express.Router();
 
@@ -7,10 +7,12 @@ const {
   getReminders
 } = require("../controllers/notificationController");
 
-// Create a new medication reminder
-router.post("/create", createReminder);
+const { verifyToken } = require("../middleware/authMiddleware");
 
-// Get all reminders
-router.get("/", getReminders);
+// Create a new medication reminder (protected)
+router.post("/create", verifyToken, createReminder);
+
+// Get all reminders (protected)
+router.get("/", verifyToken, getReminders);
 
 module.exports = router;
