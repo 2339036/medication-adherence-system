@@ -3,26 +3,21 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const connectDB = require("./config/db");
+
+const medicationRoutes = require("./routes/medicationRoutes");
 
 const app = express();
+// CONNECT TO MONGODB
+connectDB();
 
-// Middleware
+// MIDDLEWARE
 app.use(cors());
 app.use(express.json());
-
-// Health check
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "Medication service is running"
-  });
-});
-
-// Routes
-const medicationRoutes = require("./routes/medicationRoutes");
+// ROUTES
 app.use("/api/medications", medicationRoutes);
 
-// Start server
-const PORT = process.env.MEDICATION_SERVICE_PORT || 5002;
+const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => {
-  console.log(`Medication service running on port ${PORT}`);
+  console.log(`Medication service is running on port ${PORT}`);
 });

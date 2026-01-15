@@ -1,9 +1,9 @@
-//this file handles medication creation and retrieval
-// Temporary in-memory medication storage
-const medications = [];
+// this file handles medication creation and retrieval using MongoDB
+
+const Medication = require("../models/Medication");
 
 // CREATE MEDICATION (Protected)
-exports.createMedication = (req, res) => {
+exports.createMedication = async (req, res) => {
   try {
     const { name, dosage, frequency } = req.body;
 
@@ -14,16 +14,13 @@ exports.createMedication = (req, res) => {
       });
     }
 
-    // Create medication object
-    const medication = {
-      id: Date.now().toString(),
+    // Create medication in MongoDB
+    const medication = await Medication.create({
       userId: req.userId,   // Comes from JWT middleware
       name,
       dosage,
       frequency
-    };
-
-    medications.push(medication);   // Save medication
+    });
 
     res.status(201).json({
       message: "Medication added successfully",
@@ -39,10 +36,18 @@ exports.createMedication = (req, res) => {
 };
 
 // GET MEDICATIONS (only for logged-in user)
-exports.getMedications = (req, res) => {
-  const userMedications = medications.filter(
-    med => med.userId === req.userId
-  );
+exports.getMedications = async (req, res) => {
+  try {
+    const medications = await Medication.find({
+      userId: req.userId
+    });
 
-  res.status(200).json(userMedications);
+    res.status(200).json(medications);
+
+  } catch (error) {
+    console.error("Get medications error:", error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
 };
