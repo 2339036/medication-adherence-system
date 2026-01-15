@@ -1,10 +1,8 @@
 // Import required packages
 const bcrypt = require("bcryptjs");          // For hashing passwords
 const jwt = require("jsonwebtoken");         // For creating JWT tokens
-//const User = require("../models/User");      // User model
+const User = require("../models/User");      // User model
 
-// Temporary in-memory user storage (will be replaced with DB later)
-const users = [];
 
 // Helper function to validate email format
 const isValidEmail = (email) => {
@@ -17,54 +15,38 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validation: required fields
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
-    }
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
+    // Validation
+    if (!name) return res.status(400).json({ message: "Name is required" });
+    if (!email) return res.status(400).json({ message: "Email is required" });
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: "Invalid email format" });
     }
-
-    if (!password) {
-      return res.status(400).json({ message: "Password is required" });
-    }
-
+    if (!password) return res.status(400).json({ message: "Password is required" });
     if (password.length < 6) {
       return res.status(400).json({
         message: "Password must be at least 6 characters long"
       });
     }
 
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === email);
+    // Check if email exists
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({
-        message: "Email already registered"
-      });
+      return res.status(409).json({ message: "Email already registered" });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user object
-    const newUser = {
-      id: Date.now().toString(),
+    // Create user in MongoDB
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword
-    };
+    });
 
-    // Save user
-    users.push(newUser);
-
-    // Create JWT token
+    // Create JWT
     const token = jwt.sign(
-      { userId: newUser.id },
+      { userId: newUser._id },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
@@ -80,33 +62,39 @@ exports.register = async (req, res) => {
   }
 };
 
+
+// LOGIN USER
 // LOGIN USER
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-// Validation: required fields
+
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required"
       });
     }
-// Find user by email
-    const user = users.find(u => u.email === email);
+
+    // Find user in MongoDB
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password"
       });
     }
-// Verify password
+
+    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
         message: "Invalid email or password"
       });
     }
-// Create JWT token
-    const token = jwt.sign( 
-      { userId: user.id },
+
+    // Create JWT
+    const token = jwt.sign(
+      { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
@@ -122,28 +110,26 @@ exports.login = async (req, res) => {
   }
 };
 
+
 // UPDATE PROFILE
 exports.updateProfile = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Find user by ID from JWT
-    const userIndex = users.findIndex(
-      user => user.id === req.userId
-    );
-
-    if (userIndex === -1) {
+    // Find user by ID
+    const user = await User.findById(req.userId);
+    if (!user) {
       return res.status(404).json({
         message: "User not found"
       });
     }
 
-    // Update name if provided
+    // Update name
     if (name) {
-      users[userIndex].name = name;
+      user.name = name;
     }
 
-    // Update email if provided
+    // Update email
     if (email) {
       if (!isValidEmail(email)) {
         return res.status(400).json({
@@ -151,10 +137,11 @@ exports.updateProfile = async (req, res) => {
         });
       }
 
-      // Prevent duplicate email
-      const emailExists = users.some(
-        user => user.email === email && user.id !== req.userId
-      );
+      // Check email uniqueness
+      const emailExists = await User.findOne({
+        email,
+        _id: { $ne: user._id }
+      });
 
       if (emailExists) {
         return res.status(409).json({
@@ -162,10 +149,10 @@ exports.updateProfile = async (req, res) => {
         });
       }
 
-      users[userIndex].email = email;
+      user.email = email;
     }
 
-    // Update password if provided
+    // Update password
     if (password) {
       if (password.length < 6) {
         return res.status(400).json({
@@ -173,8 +160,10 @@ exports.updateProfile = async (req, res) => {
         });
       }
 
-      users[userIndex].password = await bcrypt.hash(password, 10);
+      user.password = await bcrypt.hash(password, 10);  // Hash new password
     }
+
+    await user.save();  // Save updated user
 
     res.status(200).json({
       message: "Profile updated successfully"
@@ -187,4 +176,5 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
 
