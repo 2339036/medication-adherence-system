@@ -12,9 +12,23 @@ exports.recordAdherence = async (req, res) => {
         message: "medicationId, date, and taken are required"
       });
     }
-// Create adherence record
+
+    // Check if adherence already exists for this medication on this date
+    const existingRecord = await Adherence.findOne({
+      userId: req.user.userId,
+      medicationId,
+      date
+    });
+
+    if (existingRecord) {
+      return res.status(409).json({
+        message: "Adherence already recorded for this medication today"
+      });
+    }
+
+    // Create new adherence record
     const adherence = await Adherence.create({
-      userId: req.user.userId,   // from JWT
+      userId: req.user.userId,
       medicationId,
       date,
       taken
@@ -32,6 +46,7 @@ exports.recordAdherence = async (req, res) => {
     });
   }
 };
+
 
 // GET ADHERENCE HISTORY FOR USER
 exports.getAdherenceHistory = async (req, res) => {
