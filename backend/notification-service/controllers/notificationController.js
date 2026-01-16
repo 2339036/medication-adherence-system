@@ -1,53 +1,46 @@
 // this file handles creating and retrieving medication reminders
 
-const { startScheduler } = require("../scheduler/reminderScheduler");
+const Reminder = require("../models/Reminder");
 
-// Temporary in-memory reminder storage
-const reminders = [];
-
-// Start the scheduler once
-startScheduler(reminders);
-
-// CREATE REMINDER
-exports.createReminder = (req, res) => {
+// the code below defines two functions: createReminder and getReminders
+exports.createReminder = async (req, res) => {
   try {
-    const { medicationName, time } = req.body;
+    const { medicationId, medicationName, time } = req.body;
 
-    // Validation
-    if (!medicationName || !time) {
+    if (!medicationId || !medicationName || !time) {
       return res.status(400).json({
-        message: "Medication name and time are required"
+        message: "Medication ID, name and time are required"
       });
     }
-
-    // Create reminder object
-    const reminder = {
-      id: Date.now().toString(),
-      userId: req.userId, 
+    
+// Create new reminder
+    const reminder = await Reminder.create({
+      userId: req.user.userId,
+      medicationId,
       medicationName,
       time
-    };
-
-    reminders.push(reminder);   // Store reminder
+    });
 
     res.status(201).json({
-      message: "Reminder scheduled successfully",
+      message: "Reminder created successfully",
       reminder
     });
 
   } catch (error) {
     console.error("Create reminder error:", error);
-    res.status(500).json({
-      message: "Server error"
-    });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// GET REMINDERS (only for logged-in user)
-exports.getReminders = (req, res) => {
-  const userReminders = reminders.filter(
-    reminder => reminder.userId === req.userId
-  );
+// GET REMINDERS (USER-SCOPED)
+exports.getReminders = async (req, res) => {
+  try {
+    const reminders = await Reminder.find({
+      userId: req.user.userId
+    });
 
-  res.status(200).json(userReminders);
+    res.status(200).json(reminders);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 };

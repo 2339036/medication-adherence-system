@@ -4,9 +4,12 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const connectDB = require("./config/db"); 
+
 
 // Create Express app
 const app = express();
+connectDB(); // Connect to the database
 
 // Middleware
 app.use(cors());            // Allow cross-origin requests
