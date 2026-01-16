@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   recordAdherence,
   getAdherenceHistory,
+  updateAdherence,
   getAdherenceSummary
 } = require("../controllers/adherenceController");
 
@@ -15,6 +16,9 @@ router.post("/record", verifyToken, recordAdherence);
 
 // Get adherence history for logged-in user
 router.get("/", verifyToken, getAdherenceHistory);
+
+// Update adherence (toggle taken / not taken)
+router.put("/update", verifyToken, updateAdherence);
 
 // Get adherence summary for logged-in user
 router.get("/summary", verifyToken, getAdherenceSummary);

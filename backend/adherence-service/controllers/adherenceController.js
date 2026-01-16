@@ -65,6 +65,47 @@ exports.getAdherenceHistory = async (req, res) => {
   }
 };
 
+// UPDATE ADHERENCE (change taken ↔ not taken)
+exports.updateAdherence = async (req, res) => {
+  try {
+    const { medicationId, date, taken } = req.body;
+
+    if (!medicationId || !date || taken === undefined) {
+      return res.status(400).json({
+        message: "medicationId, date, and taken are required"
+      });
+    }
+
+    const adherence = await Adherence.findOneAndUpdate(
+      {
+        userId: req.user.userId,
+        medicationId,
+        date
+      },
+      { taken },
+      { new: true }
+    );
+
+    if (!adherence) {
+      return res.status(404).json({
+        message: "Adherence record not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Adherence updated successfully",
+      adherence
+    });
+
+  } catch (error) {
+    console.error("Update adherence error:", error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
+
+
 // GET ADHERENCE SUMMARY FOR USER
 exports.getAdherenceSummary = async (req, res) => {
   try {
