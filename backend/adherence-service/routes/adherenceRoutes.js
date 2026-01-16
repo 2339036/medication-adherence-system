@@ -4,7 +4,8 @@ const router = express.Router();
 
 const {
   recordAdherence,
-  getAdherenceHistory
+  getAdherenceHistory,
+  getAdherenceSummary
 } = require("../controllers/adherenceController");
 
 const { verifyToken } = require("../middleware/authMiddleware");
@@ -14,5 +15,9 @@ router.post("/record", verifyToken, recordAdherence);
 
 // Get adherence history for logged-in user
 router.get("/", verifyToken, getAdherenceHistory);
+
+// Get adherence summary for logged-in user
+router.get("/summary", verifyToken, getAdherenceSummary);
+
 
 module.exports = router;

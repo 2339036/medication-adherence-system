@@ -64,3 +64,34 @@ exports.getAdherenceHistory = async (req, res) => {
     });
   }
 };
+
+// GET ADHERENCE SUMMARY FOR USER
+exports.getAdherenceSummary = async (req, res) => {
+  try {
+    const records = await Adherence.find({
+      userId: req.user.userId
+    });
+
+    const total = records.length;
+    const taken = records.filter(r => r.taken).length;
+    const missed = total - taken;
+
+    const adherenceRate = total === 0
+      ? 0
+      : Math.round((taken / total) * 100);
+
+    res.status(200).json({
+      total,
+      taken,
+      missed,
+      adherenceRate
+    });
+
+  } catch (error) {
+    console.error("Get adherence summary error:", error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
+
