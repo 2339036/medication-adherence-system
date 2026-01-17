@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -59,10 +60,23 @@ function Login() {
             </span>
           </div>
 
+          {/* Forgot password link */}
+          <div style={{ textAlign: "right", marginBottom: "1rem" }}>
+            <Link to="/forgot-password" style={{ fontSize: "0.9rem" }}>
+              Forgot password?
+            </Link>
+          </div>
+
           {/* Submit button */}
           <button type="submit">Login</button>
         </form>
 
+        {/* Register link */}
+        <p style={{ marginTop: "1rem", textAlign: "center" }}>
+          Don’t have an account?{" "}
+          <Link to="/register">Create one</Link>
+        </p>
+        
         {/* Display login message if it exists */}
         {message && <p>{message}</p>}
       </div>

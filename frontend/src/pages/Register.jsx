@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { registerUser } from "../services/authService";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Register() {
   // Form state
@@ -95,6 +96,13 @@ function Register() {
           {/* Submit button */}
           <button type="submit">Create Account</button>
         </form>
+        
+        <p 
+        style={{ marginTop: "1rem", textAlign: "center" }}>
+          Already have an account?{" "}
+          <Link to="/">Login</Link>
+        </p>
+       
 
         {/* Feedback message */}
         {message && <p>{message}</p>}
