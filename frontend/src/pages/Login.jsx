@@ -2,12 +2,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent page refresh
@@ -19,6 +23,8 @@ function Login() {
     if (result.token) {
       localStorage.setItem("token", result.token); // Store token
       setMessage("Login successful");
+      login(result);           // store user globally
+      navigate("/dashboard"); // redirect after login
     } else {
       setMessage(result.message || "Login failed");
     }
@@ -76,7 +82,7 @@ function Login() {
           Don’t have an account?{" "}
           <Link to="/register">Create one</Link>
         </p>
-        
+
         {/* Display login message if it exists */}
         {message && <p>{message}</p>}
       </div>
