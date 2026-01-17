@@ -85,3 +85,21 @@ body {
   color: #d61919;
 }
 
+/* Dashboard action buttons layout */
+.dashboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* Dashboard buttons */
+.dashboard-actions button {
+  background-color: #5bbddb;
+  color: white;
+}
+
+.dashboard-actions button:hover {
+  background-color: #3fa7c7;
+}
+
+
