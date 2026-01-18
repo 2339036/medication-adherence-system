@@ -102,4 +102,136 @@ body {
   background-color: #3fa7c7;
 }
 
+/* Medications page container - centered vertically with gap */
+.medications-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Medication item styling */
+.medication-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+}
+
+.med-info {
+  flex: 1;
+}
+
+.med-info strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.med-info p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Action icons container */
+.med-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-left: 1rem;
+}
+
+/* Icon button styling */
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.edit-icon {
+  color: #9225eb;
+}
+
+.edit-icon:hover {
+  color: #7018d1;
+}
+
+.delete-icon {
+  color: #d61919;
+}
+
+.delete-icon:hover {
+  color: #b01515;
+}
+
+/* Edit form styling */
+.edit-form {
+  width: 100%;
+}
+
+.edit-form input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+}
+
+.save-btn,
+.cancel-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+/* Message styling */
+.message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
 

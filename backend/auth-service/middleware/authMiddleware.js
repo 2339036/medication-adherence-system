@@ -1,3 +1,4 @@
+//file: backend/auth-service/middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 
 // This middleware protects the routes

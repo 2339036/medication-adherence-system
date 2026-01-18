@@ -1,3 +1,4 @@
+//file: backend/medication-service/middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 
 exports.verifyToken = (req, res, next) => {
@@ -13,11 +14,19 @@ exports.verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
+    const userId = decoded.userId || decoded._id;
+    // Safety check (prevents silent crashes)
+    if (!userId) {
+      return res.status(401).json({
+        message: "Invalid token payload"
+      });
+    }
+
+    req.user = { userId };
     next();
   } catch (error) {
     return res.status(401).json({
-      message: "Invalid or expired token."
+      message: "Token is invalid or expired"
     });
   }
 };

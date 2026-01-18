@@ -1,3 +1,4 @@
+//file: backend/auth-service/controllers/authController.js
 // Import required packages
 const bcrypt = require("bcryptjs");          // For hashing passwords
 const jwt = require("jsonwebtoken");         // For creating JWT tokens
