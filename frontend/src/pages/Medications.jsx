@@ -4,10 +4,15 @@
 import { useEffect, useState } from "react";
 import { getMedications, createMedication, deleteMedication, updateMedication } from "../services/medicationService";
 import { FaTrash, FaEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
 
 function Medications() {
   // State for medications list
   const [medications, setMedications] = useState([]);
+
+  const navigate = useNavigate(); // Navigation hook
+
 
   // Form state
   const [name, setName] = useState("");
@@ -214,6 +219,22 @@ function Medications() {
             </div>
           ))
         )}
+      </div>
+
+      {/* Adherence navigation card */}
+      <div className="card adherence-card">
+        <h2>📊 Track Medication Adherence</h2>
+
+        <p style={{ textAlign: "center", marginBottom: "1rem" }}>
+          View your medication intake history and adherence progress.
+        </p>
+
+        <button
+          onClick={() => navigate("/adherence")}
+          style={{ width: "100%" }}
+        >
+          Go to Adherence Tracking
+        </button>
       </div>
 
     </div>
