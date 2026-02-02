@@ -25,12 +25,27 @@ function Dashboard() {
           Welcome to your Medication Adherence Dashboard
         </p>
 
-        {/* Navigation cards (placeholders for now) */}
+        {/* Dashboard navigation buttons */}
         <div className="dashboard-actions">
-          <button>Medication History</button>
-          <button>Notifications</button>
-          <button>Security Settings</button>
-          <button>Chatbot</button>
+          {/* Navigate to medications page */}
+          <button onClick={() => navigate("/medications")}>
+            Medication History
+          </button>
+
+          {/* Navigate to notifications page */}
+          <button onClick={() => navigate("/notifications")}>
+            Notifications
+          </button>
+
+          {/* Navigate to profile / security settings */}
+          <button onClick={() => navigate("/profile")}>
+            Security Settings
+          </button>
+
+          {/* Navigate to chatbot page */}
+          <button onClick={() => navigate("/chatbot")}>
+            Chatbot
+          </button>
         </div>
 
         {/* Logout button */}
