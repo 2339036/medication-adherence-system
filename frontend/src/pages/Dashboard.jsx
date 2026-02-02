@@ -38,7 +38,7 @@ function Dashboard() {
           </button>
 
           {/* Navigate to profile / security settings */}
-          <button onClick={() => navigate("/profile")}>
+          <button onClick={() => navigate("/account")}>
             Security Settings
           </button>
 

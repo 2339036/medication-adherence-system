@@ -8,6 +8,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Medications from "./pages/Medications";
 import Adherence from "./pages/Adherence";
+import Notifications from "./pages/Notifications";
+import Account from "./pages/Account";
+import Chatbot from "./pages/Chatbot";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -44,6 +48,34 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <Account />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chatbot"
+        element={
+          <ProtectedRoute>
+            <Chatbot />
+          </ProtectedRoute>
+        }
+      />
+      
     </Routes>
   );
 }
