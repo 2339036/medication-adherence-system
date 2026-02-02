@@ -31,3 +31,14 @@ export const getAdherenceHistory = async () => {
 
   return response.json();
 };
+
+// Update adherence (toggle taken / missed)
+export const updateAdherence = async (adherenceData) => {
+  const response = await fetch(`${API_URL}/update`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(adherenceData)
+  });
+
+  return response.json();
+};

@@ -18,6 +18,10 @@ const adherenceSchema = new mongoose.Schema(
     taken: {
       type: Boolean,
       required: true
+    },
+    doseIndex: {
+      type: Number,
+      required: true
     }
   },
   { timestamps: true }
