@@ -173,14 +173,14 @@ function Adherence() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", padding: "2rem 1rem", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", padding: "3rem 2rem", boxSizing: "border-box" }}>
 
       {/* CALENDAR CARD - centered at top */}
       <div 
         style={{
-          maxWidth: "600px",
+          maxWidth: "400px",
           width: "100%",
-          marginBottom: "3rem"
+          marginBottom: "0 auto 3rem auto"
         }}>
         <div className="card" 
           style={{ marginBottom: "0" }}>
@@ -245,7 +245,8 @@ function Adherence() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
-              gap: "0.5rem"
+              gap: "0.5rem",
+              justifyItems: "center"
             }}
           >
             {calendarCells}
