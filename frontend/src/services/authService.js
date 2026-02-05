@@ -1,3 +1,5 @@
+//this file contains functions to interact with the backend API for authentication purposes, such as registering and logging in users.
+
 const API_URL = "http://localhost:5001/api/auth";
 
 // Register a new user
