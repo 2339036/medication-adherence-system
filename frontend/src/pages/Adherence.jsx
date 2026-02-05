@@ -8,6 +8,7 @@ import {
   recordAdherence,
   updateAdherence
 } from "../services/adherenceService";
+import AdherenceCharts from "../components/AdherenceCharts";
 
 
 function Adherence() {
@@ -172,177 +173,189 @@ function Adherence() {
   }
 
   return (
-    <div className="page-container">
-      <div className="card">
-        {/* Header: month navigation and visible month/year */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem"
-          }}
-        >
-          <button
-            onClick={goToPreviousMonth}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", padding: "2rem 1rem", boxSizing: "border-box" }}>
+
+      {/* CALENDAR CARD - centered at top */}
+      <div 
+        style={{
+          maxWidth: "600px",
+          width: "100%",
+          marginBottom: "3rem"
+        }}>
+        <div className="card" 
+          style={{ marginBottom: "0" }}>
+          {/* Header */}
+          <div
             style={{
-              borderRadius: "50%",
-              padding: "0.5rem 0.75rem"
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem"
             }}
           >
-            ◀
-          </button>
+            <button
+              onClick={goToPreviousMonth}
+              style={{
+                borderRadius: "50%",
+                padding: "0.5rem 0.75rem"
+              }}
+            >
+              ◀
+            </button>
 
-          <h2 style={{ textAlign: "center", flex: 1 }}>
-            {currentDate.toLocaleString("default", {
-              month: "long",
-              year: "numeric"
-            })}
-          </h2>
+            <h2 style={{ textAlign: "center", flex: 1 }}>
+              {currentDate.toLocaleString("default", {
+                month: "long",
+                year: "numeric"
+              })}
+            </h2>
 
-          <button
-            onClick={goToNextMonth}
-            style={{
-              borderRadius: "50%",
-              padding: "0.5rem 0.75rem"
-            }}
-          >
-            ▶
-          </button>
-        </div>
-
-        {/* Weekday labels: simple static row */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "0.5rem"
-          }}
-        >
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
-          <div>Sun</div>
-        </div>
-
-        {/* Calendar grid: displays day buttons created above */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: "0.5rem"
-          }}
-        >
-          {calendarCells}
-        </div>
-
-        {/* Day Actions: shown when a day is selected. Lists medications and dose buttons. */}
-        {selectedDate && (
-          <div style={{ marginTop: "2rem" }}>
-            <h3 style={{ textAlign: "center", marginBottom: "1rem" }}>
-              Scheduled medications for {selectedDate.toDateString()}
-            </h3>
-
-            {medications.length === 0 ? (
-              <p style={{ textAlign: "center" }}>No medications found</p>
-            ) : (
-              medications.map((med) => {
-                // Determine dose slots for the medication frequency
-                const doses = getDoseSlots(med.frequency);
-
-                return (
-                  <div
-                    key={med._id}
-                    style={{
-                      border: "1px solid #e0e0e0",
-                      borderRadius: "12px",
-                      padding: "1rem",
-                      marginBottom: "1rem"
-                    }}
-                  >
-                    <strong>{med.name}</strong>
-                    <p style={{ fontSize: "0.9rem", marginBottom: "0.75rem" }}>
-                      {med.dosage} • {med.frequency}
-                    </p>
-
-                    {doses.map((dose, index) => {
-                      // Find the adherence record for this medication/dose on the selectedDate
-                      const record = history.find(
-                        (r) =>
-                          r.medicationId === med._id &&
-                          normalizeDate(r.date) === normalizeDate(selectedDate) &&
-                          r.doseIndex === index
-                      );
-
-                      return (
-                        <div
-                          key={index}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            marginBottom: "0.5rem"
-                          }}
-                        >
-                          <span>{dose}</span>
-
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
-                            {/* Button to mark dose as taken. Visual state driven by `record?.taken` */}
-                            <button
-                              onClick={() =>
-                                handleMark(med._id, index, true)
-                              }
-                              style={{
-                                padding: "0.35rem 1rem",
-                                borderRadius: "999px",
-                                border: "none",
-                                backgroundColor: record?.taken
-                                  ? "#4CAF50"
-                                  : "#e0e0e0",
-                                color: record?.taken ? "white" : "black"
-                              }}
-                            >
-                              Taken
-                            </button>
-
-                            {/* Button to mark dose as missed. Visual state driven by `record && !record.taken` */}
-                            <button
-                              onClick={() =>
-                                handleMark(med._id, index, false)
-                              }
-                              style={{
-                                padding: "0.35rem 1rem",
-                                borderRadius: "999px",
-                                border: "none",
-                                backgroundColor:
-                                  record && !record.taken
-                                    ? "#f44336"
-                                    : "#e0e0e0",
-                                color:
-                                  record && !record.taken
-                                    ? "white"
-                                    : "black"
-                              }}
-                            >
-                              Missed
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })
-            )}
+            <button
+              onClick={goToNextMonth}
+              style={{
+                borderRadius: "50%",
+                padding: "0.5rem 0.75rem"
+              }}
+            >
+              ▶
+            </button>
           </div>
-        )}
 
+          {/* Weekdays */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              textAlign: "center",
+              fontWeight: "bold",
+              marginBottom: "0.5rem"
+            }}
+          >
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+            <div>Sun</div>
+          </div>
+
+          {/* Calendar */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: "0.5rem"
+            }}
+          >
+            {calendarCells}
+          </div>
+
+          {/* Day actions*/}
+          {selectedDate && (
+            <div style={{ marginTop: "2rem" }}>
+              <h3 style={{ textAlign: "center", marginBottom: "1rem" }}>
+                Scheduled medications for {selectedDate.toDateString()}
+              </h3>
+
+              {medications.length === 0 ? (
+                <p style={{ textAlign: "center" }}>No medications found</p>
+              ) : (
+                medications.map((med) => {
+                  // Determine dose slots for the medication frequency
+                  const doses = getDoseSlots(med.frequency);
+
+                  return (
+                    <div
+                      key={med._id}
+                      style={{
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "12px",
+                        padding: "1rem",
+                        marginBottom: "1rem"
+                      }}
+                    >
+                      <strong>{med.name}</strong>
+                      <p style={{ fontSize: "0.9rem", marginBottom: "0.75rem" }}>
+                        {med.dosage} • {med.frequency}
+                      </p>
+
+                      {doses.map((dose, index) => {
+                        // Find the adherence record for this medication/dose on the selectedDate
+                        const record = history.find(
+                          (r) =>
+                            r.medicationId === med._id &&
+                            normalizeDate(r.date) === normalizeDate(selectedDate) &&
+                            r.doseIndex === index
+                        );
+
+                        return (
+                          <div
+                            key={index}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginBottom: "0.5rem"
+                            }}
+                          >
+                            <span>{dose}</span>
+
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                              {/* Button to mark dose as taken. Visual state driven by `record?.taken` */}
+                              <button
+                                onClick={() =>
+                                  handleMark(med._id, index, true)
+                                }
+                                style={{
+                                  padding: "0.35rem 1rem",
+                                  borderRadius: "999px",
+                                  border: "none",
+                                  backgroundColor: record?.taken
+                                    ? "#4CAF50"
+                                    : "#e0e0e0",
+                                  color: record?.taken ? "white" : "black"
+                                }}
+                              >
+                                Taken
+                              </button>
+
+                              {/* Button to mark dose as missed. Visual state driven by `record && !record.taken` */}
+                              <button
+                                onClick={() =>
+                                  handleMark(med._id, index, false)
+                                }
+                                style={{
+                                  padding: "0.35rem 1rem",
+                                  borderRadius: "999px",
+                                  border: "none",
+                                  backgroundColor:
+                                    record && !record.taken
+                                      ? "#f44336"
+                                      : "#e0e0e0",
+                                  color:
+                                    record && !record.taken
+                                      ? "white"
+                                      : "black"
+                                }}
+                              >
+                                Missed
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* CHARTS SECTION - responsive cards below calendar */}
+      <AdherenceCharts history={history} />
     </div>
   );
 }
