@@ -4,7 +4,8 @@ const router = express.Router();
 
 const {
   createReminder,
-  getReminders
+  getReminders,
+  deleteReminder
 } = require("../controllers/notificationController");
 
 const { verifyToken } = require("../middleware/authMiddleware");
@@ -14,5 +15,8 @@ router.post("/create", verifyToken, createReminder);
 
 // Get all reminders (protected)
 router.get("/", verifyToken, getReminders);
+
+// Delete a reminder (protected)
+router.delete("/:id", verifyToken, deleteReminder);
 
 module.exports = router;

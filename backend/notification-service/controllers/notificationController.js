@@ -32,7 +32,7 @@ exports.createReminder = async (req, res) => {
   }
 };
 
-// GET REMINDERS (USER-SCOPED)
+// GET REMINDERS
 exports.getReminders = async (req, res) => {
   try {
     const reminders = await Reminder.find({
@@ -44,3 +44,33 @@ exports.getReminders = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// DELETE REMINDER
+exports.deleteReminder = async (req, res) => {
+  try {
+    const reminderId = req.params.id;
+
+    // Find reminder that belongs to the logged-in user
+    const reminder = await Reminder.findOne({
+      _id: reminderId,
+      userId: req.user.userId
+    });
+
+    if (!reminder) {
+      return res.status(404).json({
+        message: "Reminder not found"
+      });
+    }
+
+    await reminder.deleteOne();
+
+    res.status(200).json({
+      message: "Reminder deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Delete reminder error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
