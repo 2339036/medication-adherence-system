@@ -1,5 +1,5 @@
 // src/pages/Adherence.jsx
-// Monthly calendar adherence tracking with per-day actions
+// monthly calendar for tracking medication adherence.
 
 import { getMedications } from "../services/medicationService";
 import { useEffect, useState } from "react";
@@ -11,34 +11,47 @@ import {
 
 
 function Adherence() {
+  // React state hooks
+  // `currentDate`: Date object for the currently shown month (used for calendar calculations)
+  // `selectedDate`: Date object for the day the user clicked on (null if none)
+  // `history`: array of adherence records fetched from the backend
+  // `medications`: array of user's medications fetched from the backend
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [history, setHistory] = useState([]);
   const [medications, setMedications] = useState([]);   // Stores user's medications
 
 
+  // useEffect: runs once after mount to load initial data
   useEffect(() => {
     fetchHistory();
     fetchMedications();
   }, []);
 
+  // Fetch adherence history from backend (adherence-service)
+  // Returns an array of records: { medicationId, date, doseIndex, taken }
   const fetchHistory = async () => {
     const data = await getAdherenceHistory();
     setHistory(data);
   };
 
+  // Fetch medications for the current user (medication-service)
   const fetchMedications = async () => {
     const data = await getMedications();
     setMedications(data);
   }
 
+  // Calendar date calculations
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  // Determine weekday offset for the first day of month
+  // `getDay()` returns 0 (Sun) - 6 (Sat). We convert so week starts on Monday.
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Navigation helpers to change month view
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
     setSelectedDate(null);
@@ -49,15 +62,39 @@ function Adherence() {
     setSelectedDate(null);
   };
 
+  // normalizeDate: convert a Date/ISO to `YYYY-MM-DD` string for comparison
   const normalizeDate = (date) =>
     new Date(date).toISOString().split("T")[0];
 
+  // getDayStatus: determine a day's overall status based on records
+  const getDayStatus = (dateObj) => {
+    const day = normalizeDate(dateObj);
+
+    // Filter history to records matching this calendar day 
+    const recordsForDay = history.filter(
+      (r) => normalizeDate(r.date) === day
+    );
+
+    if (recordsForDay.length === 0) return "none";
+
+    // Count how many records are marked `taken` (boolean)
+    const takenCount = recordsForDay.filter(r => r.taken).length;
+
+    if (takenCount === recordsForDay.length) return "taken";   // all taken
+    if (takenCount === 0) return "missed";                     // all missed
+
+    return "partial";                                          // mixed
+  };
+
+  // helper that finds a record for the selectedDate (if any)
   const selectedRecord = selectedDate
     ? history.find(
         (r) => normalizeDate(r.date) === normalizeDate(selectedDate)
       )
     : null;
 
+  // handleMark: mark a specific medication dose as taken/missed
+  // Creates a payload and calls `recordAdherence` or `updateAdherence`.
   const handleMark = async (medicationId, doseIndex, takenStatus) => {
     const payload = {
       medicationId,
@@ -66,6 +103,7 @@ function Adherence() {
       taken: takenStatus
     };
 
+    // Check if an entry already exists for that medication/dose/day
     const existing = history.find(
       (r) =>
         r.medicationId === medicationId &&
@@ -74,14 +112,16 @@ function Adherence() {
     );
 
     if (existing) {
+      // update existing record (PATCH/PUT
       await updateAdherence(payload);
     } else {
+      // create new record (POST)
       await recordAdherence(payload);
     }
 
+    // Refresh local state after change
     fetchHistory();
   };
-
 
   const getDoseSlots = (frequency) => {
     const freq = frequency.toLowerCase();
@@ -91,10 +131,10 @@ function Adherence() {
     if (freq.includes("three")) return ["Dose 1", "Dose 2", "Dose 3"];
     if (freq.includes("four")) return ["Dose 1", "Dose 2", "Dose 3", "Dose 4"];
 
-    // fallback
     return ["Dose"];
   };
 
+  // Build calendar cells: add empty placeholders for offset, then day buttons
   const calendarCells = [];
 
   for (let i = 0; i < startDay; i++) {
@@ -103,10 +143,9 @@ function Adherence() {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateObj = new Date(year, month, day);
-    const record = history.find(
-      (r) => normalizeDate(r.date) === normalizeDate(dateObj)
-    );
+    const status = getDayStatus(dateObj);
 
+    // Each day is rendered as a button whose background color reflects status
     calendarCells.push(
       <button
         key={day}
@@ -115,12 +154,15 @@ function Adherence() {
           padding: "0.75rem",
           borderRadius: "50%",
           border: "1px solid #ccc",
-          backgroundColor: record
-            ? record.taken
-              ? "#4CAF50"
-              : "#f44336"
-            : "white",
-          color: record ? "white" : "black",
+          backgroundColor:
+            status === "taken"
+              ? "#4CAF50" // green: all doses taken
+              : status === "missed"
+              ? "#f44336" // red: all missed
+              : status === "partial"
+              ? "#FF9800" // orange: partial
+              : "white",
+          color: status === "none" ? "black" : "white",
           cursor: "pointer"
         }}
       >
@@ -132,7 +174,7 @@ function Adherence() {
   return (
     <div className="page-container">
       <div className="card">
-        {/* Header */}
+        {/* Header: month navigation and visible month/year */}
         <div
           style={{
             display: "flex",
@@ -169,7 +211,7 @@ function Adherence() {
           </button>
         </div>
 
-        {/* Weekdays */}
+        {/* Weekday labels: simple static row */}
         <div
           style={{
             display: "grid",
@@ -188,7 +230,7 @@ function Adherence() {
           <div>Sun</div>
         </div>
 
-        {/* Calendar */}
+        {/* Calendar grid: displays day buttons created above */}
         <div
           style={{
             display: "grid",
@@ -199,7 +241,7 @@ function Adherence() {
           {calendarCells}
         </div>
 
-        {/* Day Actions */}
+        {/* Day Actions: shown when a day is selected. Lists medications and dose buttons. */}
         {selectedDate && (
           <div style={{ marginTop: "2rem" }}>
             <h3 style={{ textAlign: "center", marginBottom: "1rem" }}>
@@ -210,6 +252,7 @@ function Adherence() {
               <p style={{ textAlign: "center" }}>No medications found</p>
             ) : (
               medications.map((med) => {
+                // Determine dose slots for the medication frequency
                 const doses = getDoseSlots(med.frequency);
 
                 return (
@@ -228,6 +271,7 @@ function Adherence() {
                     </p>
 
                     {doses.map((dose, index) => {
+                      // Find the adherence record for this medication/dose on the selectedDate
                       const record = history.find(
                         (r) =>
                           r.medicationId === med._id &&
@@ -248,6 +292,7 @@ function Adherence() {
                           <span>{dose}</span>
 
                           <div style={{ display: "flex", gap: "0.5rem" }}>
+                            {/* Button to mark dose as taken. Visual state driven by `record?.taken` */}
                             <button
                               onClick={() =>
                                 handleMark(med._id, index, true)
@@ -265,6 +310,7 @@ function Adherence() {
                               Taken
                             </button>
 
+                            {/* Button to mark dose as missed. Visual state driven by `record && !record.taken` */}
                             <button
                               onClick={() =>
                                 handleMark(med._id, index, false)
