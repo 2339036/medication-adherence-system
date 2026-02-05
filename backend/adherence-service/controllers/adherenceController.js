@@ -4,12 +4,12 @@ const Adherence = require("../models/Adherence");
 // MARK MEDICATION AS TAKEN / NOT TAKEN
 exports.recordAdherence = async (req, res) => {
   try {
-    const { medicationId, date, taken } = req.body;
+    const { medicationId, date, taken, doseIndex } = req.body;
 
     // Validation
-    if (!medicationId || !date || taken === undefined) {
+    if (!medicationId || !date || taken === undefined || doseIndex === undefined) {
       return res.status(400).json({
-        message: "medicationId, date, and taken are required"
+        message: "medicationId, date, taken, and doseIndex are required"
       });
     }
 
@@ -17,21 +17,28 @@ exports.recordAdherence = async (req, res) => {
     const existingRecord = await Adherence.findOne({
       userId: req.user.userId,
       medicationId,
-      date
-    });
+      date,
+      doseIndex
+     });
 
+    // IF IT EXISTS --> UPDATE
     if (existingRecord) {
-      return res.status(409).json({
-        message: "Adherence already recorded for this medication today"
+      existingRecord.taken = taken;
+      await existingRecord.save();
+
+      return res.status(200).json({
+        message: "Adherence updated",
+        adherence: existingRecord
       });
     }
 
-    // Create new adherence record
+    // IF IT DOES NOT EXIST --> CREATE
     const adherence = await Adherence.create({
       userId: req.user.userId,
       medicationId,
       date,
-      taken
+      taken,
+      doseIndex
     });
 
     res.status(201).json({
@@ -53,7 +60,7 @@ exports.getAdherenceHistory = async (req, res) => {
   try {
     const adherenceHistory = await Adherence.find({
       userId: req.user.userId
-    }).sort({ date: -1 });
+    }).sort({ date: -1, doseIndex: 1 });
 
     res.status(200).json(adherenceHistory);
 
@@ -68,11 +75,11 @@ exports.getAdherenceHistory = async (req, res) => {
 // UPDATE ADHERENCE (change taken ↔ not taken)
 exports.updateAdherence = async (req, res) => {
   try {
-    const { medicationId, date, taken } = req.body;
+    const { medicationId, date, taken, doseIndex } = req.body;
 
-    if (!medicationId || !date || taken === undefined) {
+    if (!medicationId || !date || taken === undefined || doseIndex === undefined) {
       return res.status(400).json({
-        message: "medicationId, date, and taken are required"
+        message: "medicationId, date, taken, and doseIndex are required"
       });
     }
 
@@ -80,7 +87,8 @@ exports.updateAdherence = async (req, res) => {
       {
         userId: req.user.userId,
         medicationId,
-        date
+        date,
+        doseIndex
       },
       { taken },
       { new: true }

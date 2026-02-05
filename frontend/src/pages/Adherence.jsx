@@ -88,7 +88,8 @@ function Adherence() {
 
     if (freq.includes("once")) return ["Dose 1"];
     if (freq.includes("twice")) return ["Dose 1", "Dose 2"];
-    if (freq.includes("3")) return ["Dose 1", "Dose 2", "Dose 3"];
+    if (freq.includes("three")) return ["Dose 1", "Dose 2", "Dose 3"];
+    if (freq.includes("four")) return ["Dose 1", "Dose 2", "Dose 3", "Dose 4"];
 
     // fallback
     return ["Dose"];
