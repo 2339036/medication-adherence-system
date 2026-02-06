@@ -32,11 +32,6 @@ function Dashboard() {
             Medication History
           </button>
 
-          {/* Navigate to notifications page */}
-          <button onClick={() => navigate("/notifications")}>
-            Notifications
-          </button>
-
           {/* Navigate to profile / security settings */}
           <button onClick={() => navigate("/account")}>
             Security Settings
