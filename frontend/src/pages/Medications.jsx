@@ -7,6 +7,7 @@ import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getReminders, createReminder, deleteReminder } from "../services/notificationService";
 import BackButton from "../components/BackButton";
+import ReminderBanner from "../components/ReminderBanner";
 
 
 
@@ -144,6 +145,7 @@ const [reminderTime, setReminderTime] = useState("");
   return (
     <div className="medications-container">
       <BackButton />
+      <ReminderBanner reminders={reminders} />
       {/* Medications card */}
       <div className="card add-medication-card">
         <h2>➕ Add Medication</h2>
