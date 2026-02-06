@@ -3,15 +3,18 @@
 
 import { getMedications } from "../services/medicationService";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAdherenceHistory,
   recordAdherence,
   updateAdherence
 } from "../services/adherenceService";
 import AdherenceCharts from "../components/AdherenceCharts";
+import BackButton from "../components/BackButton";
 
 
 function Adherence() {
+  const navigate = useNavigate();
   // React state hooks
   // `currentDate`: Date object for the currently shown month (used for calendar calculations)
   // `selectedDate`: Date object for the day the user clicked on (null if none)
@@ -174,7 +177,7 @@ function Adherence() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", padding: "3rem 2rem", boxSizing: "border-box" }}>
-
+      <BackButton />
       {/* CALENDAR CARD - centered at top */}
       <div 
         style={{

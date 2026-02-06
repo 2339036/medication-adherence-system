@@ -7,6 +7,7 @@ import { loginUser } from "../services/authService";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import BackButton from "../components/BackButton";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -35,6 +36,7 @@ function Login() {
 
   return (
     <div className="page-container">
+      <BackButton />
       <div className="card">
         <h2>Login</h2>
 

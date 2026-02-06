@@ -1,9 +1,14 @@
 // ForgotPassword.jsx
 // Placeholder page for password recovery
 
+import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
+
 function ForgotPassword() {
+  const navigate = useNavigate();
   return (
     <div className="page-container">
+      <BackButton />
       <div className="card">
         <h2>Forgot Password</h2>
 

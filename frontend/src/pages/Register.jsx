@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { registerUser } from "../services/authService";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 
 function Register() {
   // Form state
@@ -12,6 +13,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const navigate = useNavigate();
 
   // UI state
   const [message, setMessage] = useState("");
@@ -43,6 +45,7 @@ function Register() {
 
   return (
     <div className="page-container">
+      <BackButton />
       <div className="card">
         <h2>Register</h2>
 

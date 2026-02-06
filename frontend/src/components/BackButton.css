@@ -1,0 +1,28 @@
+/* BackButton.css */
+/* Styled back button positioned at bottom left */
+
+.back-button {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  padding: 0.7rem 1.2rem;
+  background-color: #5bbddb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(91, 189, 219, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.back-button:hover {
+  background-color: #3fa7c7;
+  box-shadow: 0 6px 16px rgba(91, 189, 219, 0.4);
+  transform: translateY(-2px);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
