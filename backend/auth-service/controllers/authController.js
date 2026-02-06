@@ -3,6 +3,7 @@
 const bcrypt = require("bcryptjs");          // For hashing passwords
 const jwt = require("jsonwebtoken");         // For creating JWT tokens
 const User = require("../models/User");      // User model
+const crypto = require("crypto");            // For generating random tokens
 
 
 // Helper function to validate email format
@@ -65,7 +66,6 @@ exports.register = async (req, res) => {
 
 
 // LOGIN USER
-// LOGIN USER
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -108,6 +108,112 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// FORGOT PASSWORD
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required"
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // IMPORTANT: do not reveal whether email exists
+      return res.status(200).json({
+        message: "If the email exists, a reset link has been sent"
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash token before storing
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Token valid for 15 minutes
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    // For now: log reset link (email comes later / optional)
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    console.log("Password reset link:", resetLink);
+
+    res.status(200).json({
+      message: "Password reset link sent"
+    });
+
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
+
+// RESET PASSWORD
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        message: "New Password is required"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long"
+      });
+    }
+
+    // Hash token from URL
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Find user with valid token
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired reset token"
+      });
+    }
+
+    // Set new password
+    user.password = await bcrypt.hash(password, 10);
+
+    // Clear reset fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Password reset successful"
+    });
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({
+      message: "Server error"
+    });
   }
 };
 
