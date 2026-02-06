@@ -1,26 +1,48 @@
 // ForgotPassword.jsx
-// Placeholder page for password recovery
 
-import { useNavigate } from "react-router-dom";
-import BackButton from "../components/BackButton";
+import { useState } from "react";
+import { forgotPassword } from "../services/authService";
 
 function ForgotPassword() {
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const result = await forgotPassword(email);
+
+    setMessage(
+      result.message ||
+        "If an account exists, a password reset link has been sent."
+    );
+
+    setLoading(false);
+  };
+
   return (
     <div className="page-container">
-      <BackButton />
       <div className="card">
         <h2>Forgot Password</h2>
 
-        <p style={{ marginBottom: "1rem", textAlign: "center" }}>
-          Password reset functionality will be added later.
-        </p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-        <input type="email" placeholder="Enter your email" disabled />
+          <button type="submit" disabled={loading}>
+            {loading ? "Sending..." : "Send reset link"}
+          </button>
+        </form>
 
-        <button disabled style={{ marginTop: "1rem", opacity: 0.6 }}>
-          Reset Password
-        </button>
+        {message && <p className="message">{message}</p>}
       </div>
     </div>
   );
