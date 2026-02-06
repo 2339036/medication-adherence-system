@@ -20,6 +20,10 @@ const reminderSchema = new mongoose.Schema(
     time: {
       type: String,
       required: true
+    },
+    sent: {           //makes sure reminder is only sent oncce
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }
