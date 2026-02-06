@@ -34,6 +34,14 @@ function Medications() {
 const [reminders, setReminders] = useState([]);
 const [reminderTime, setReminderTime] = useState("");
 
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission().then((permission) => {
+        console.log("Notification permission:", permission);
+      });
+    }
+  }, []);
 
   // Fetch medications on page load
   useEffect(() => {
@@ -50,6 +58,30 @@ const [reminderTime, setReminderTime] = useState("");
     const data = await getReminders();
     setReminders(data);
   };
+
+  // Check reminders every minute and show notification if time matches
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const nowTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+      reminders.forEach((reminder) => {
+        if (reminder.time === nowTime) {
+          if (Notification.permission === "granted") {
+            navigator.serviceWorker.ready.then((reg) => {
+              reg.showNotification("💊 Medication Reminder", {
+                body: `Time to take ${reminder.medicationName}`,
+                icon: "/favicon.ico",
+              });
+            });
+          }
+        }
+      });
+    }, 60000); // check every 60 seconds
+
+    return () => clearInterval(interval);
+  }, [reminders]);
+  
 
   //reads medciation frequency and sets a limit for how many reminders can be set based on frequency
   const getMaxReminders = (frequency) => {
