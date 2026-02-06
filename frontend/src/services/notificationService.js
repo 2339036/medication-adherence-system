@@ -1,52 +1,72 @@
 // src/services/notificationService.js
-// This file handles API calls to the notification-service backend
+// Handles all API calls related to medication reminders (notification service)
 
-import axios from "axios";
+const BASE_URL = "http://localhost:5003/api/notifications";
 
-// URL for notification service
-const API_URL = "http://localhost:5003/api/notifications";
-
-// Helper to get auth header with JWT token
-const authHeader = () => {
+// Helper function to get JWT token 
+const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
 
   return {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
   };
 };
 
-// CREATE a new reminder
-// medicationId: ID of medication
-// medicationName: name (stored for display)
-// time: reminder time (HH:mm)
-export const createReminder = async (reminderData) => {
-  const response = await axios.post(
-    `${API_URL}/create`,
-    reminderData,
-    authHeader()
-  );
-
-  return response.data;
-};
-
-// GET all reminders for the logged-in user
+// Fetch all reminders for logged-in user
 export const getReminders = async () => {
-  const response = await axios.get(
-    API_URL,
-    authHeader()
-  );
+  try {
+    const response = await fetch(BASE_URL, {
+      method: "GET",
+      headers: getAuthHeaders()
+    });
 
-  return response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching reminders:", error);
+    return [];
+  }
 };
 
-// DELETE a reminder by ID
-export const deleteReminder = async (reminderId) => {
-  const response = await axios.delete(
-    `${API_URL}/${reminderId}`,
-    authHeader()
-  );
+// Create a new reminder
+export const createReminder = async (reminderData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/create`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(reminderData)
+    });
 
-  return response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating reminder:", error);
+    return { message: error.message };
+  }
+};
+
+// Delete a reminder by ID 
+export const deleteReminder = async (id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting reminder:", error);
+    return { message: error.message };
+  }
 };
