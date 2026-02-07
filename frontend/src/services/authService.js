@@ -62,3 +62,23 @@ export const resetPassword = async (token, password) => {
     return { message: "Password reset failed" };
   }
 };
+
+export const updateProfile = async (profileData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/update-profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error("Profile update failed", error);
+    return { message: "Profile update failed" };
+  }
+};
