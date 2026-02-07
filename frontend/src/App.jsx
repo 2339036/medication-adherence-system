@@ -9,7 +9,6 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Medications from "./pages/Medications";
 import Adherence from "./pages/Adherence";
-import Notifications from "./pages/Notifications";
 import Account from "./pages/Account";
 import Chatbot from "./pages/Chatbot";
 
@@ -47,15 +46,6 @@ function App() {
         element={
           <ProtectedRoute>
             <Adherence />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute>
-            <Notifications />
           </ProtectedRoute>
         }
       />
