@@ -13,9 +13,13 @@ exports.chat = async (req, res) => {
       return res.status(400).json({ reply: "Please enter a message." });
     }
 
-    // 1) RULE-BASED (simple keyword checks)
+    // 2) FAQ RETRIEVAL first
+    const faqMatch = bestFaqMatch(message, faqs);
+    if (faqMatch) {
+      return res.status(200).json({ reply: faqMatch.a });
+    }
 
-    // Greeting intent
+    // Greetings
     if (includesAny(message, ["hi", "hello", "hey"])) {
       return res.status(200).json({
         reply:
@@ -45,12 +49,6 @@ exports.chat = async (req, res) => {
         reply:
           "If this feels urgent or severe, please seek emergency medical help immediately. I can’t provide emergency medical advice."
       });
-    }
-
-    // 2) FAQ RETRIEVAL FALLBACK
-    const faqMatch = bestFaqMatch(message, faqs);
-    if (faqMatch) {
-      return res.status(200).json({ reply: faqMatch.a });
     }
 
     // 3) DEFAULT
