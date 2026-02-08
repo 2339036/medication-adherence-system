@@ -1,0 +1,61 @@
+services:
+
+
+  auth-service:
+    build: ./backend/auth-service
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./backend/auth-service/.env
+    restart: unless-stopped
+
+
+  medication-service:
+    build: ./backend/medication-service
+    ports:
+      - "5002:5002"
+    env_file:
+      - ./backend/medication-service/.env
+    restart: unless-stopped
+
+
+  notification-service:
+    build: ./backend/notification-service
+    ports:
+      - "5003:5003"
+    env_file:
+      - ./backend/notification-service/.env
+    restart: unless-stopped
+
+
+  adherence-service:
+    build: ./backend/adherence-service
+    ports:
+      - "5004:5004"
+    env_file:
+      - ./backend/adherence-service/.env
+    restart: unless-stopped
+
+
+  chatbot-service:
+    build: ./backend/chatbot-service  
+    ports:
+      - "5005:5005"
+    env_file:
+      - ./backend/chatbot-service/.env
+    environment:
+     NOTIFICATION_SERVICE_URL: http://notification-service:5003
+    restart: unless-stopped
+
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - auth-service
+      - medication-service
+      - notification-service
+      - adherence-service
+      - chatbot-service
+    restart: unless-stopped
