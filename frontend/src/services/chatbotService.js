@@ -1,25 +1,27 @@
 // frontend/src/services/chatbotService.js
-// Handles API calls to chatbot-service (NO axios, consistent with project)
+// Handles API calls to chatbot-service
 
-const BASE_URL = "http://localhost:5005/api/chatbot";
+const CHATBOT_URL = "http://localhost:5005/api/chatbot";
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+    };
+};
 
 export const sendChatMessage = async (message) => {
   try {
-    const response = await fetch(`${BASE_URL}/chat`, {
+    const response = await fetch(`${CHATBOT_URL}/chat`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ message })
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status}`);
-    }
-
     return await response.json(); // { reply: "..." }
   } catch (error) {
-    console.error("Chatbot API error:", error);
+    console.error("Chatbot service error:", error);
     return { reply: "Sorry, I couldn’t connect to the chatbot service." };
   }
 };

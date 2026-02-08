@@ -119,7 +119,11 @@ function Chatbot() {
                       fontSize: "0.85rem"
                     }}
                   >
-                    Go to Adherence
+                    {m.action.route === "/medications"
+                      ? "Go to Medications"
+                      : m.action.route === "/adherence"
+                      ? "Go to Adherence"
+                      : "Open"}
                   </button>
                 )}
               </div>
