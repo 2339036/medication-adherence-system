@@ -1,14 +1,16 @@
-//import { useNavigate } from "react-router-dom";
-
 // frontend/src/pages/Chatbot.jsx
-// Simple safe chatbot UI (rule + FAQ retrieval backend)
+// Simple chatbot UI (rule + FAQ retrieval backend)
 
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import BackButton from "../components/BackButton";
 import { sendChatMessage } from "../services/chatbotService";
 
 function Chatbot() {
+  const navigate = useNavigate();
+
   // Stores the conversation messages in order
+  // Each message can optionally include an `action` e.g. { route: "/adherence" }
   const [messages, setMessages] = useState([
     { from: "bot", text: "Hi! Ask me about reminders or adherence logging." }
   ]);
@@ -31,12 +33,32 @@ function Chatbot() {
     setInput("");
     setLoading(true);
 
-    // Call chatbot backend
-    const result = await sendChatMessage(trimmed);
+    try {
+      // Call chatbot backend
+      const result = await sendChatMessage(trimmed);
 
-    // Add bot response to chat
-    setMessages((prev) => [...prev, { from: "bot", text: result.reply }]);
-    setLoading(false);
+      const botText = result?.message || result?.reply || "Sorry, I didn’t understand that.";
+
+      // If backend indicates navigation, store an action route with the bot message
+      const botAction =
+        result?.type === "NAVIGATE" && result?.route
+          ? { route: result.route }
+          : null;
+
+      // Add bot response to chat
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: botText, action: botAction }
+      ]);
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      setMessages((prev) => [
+        ...prev,
+        { from: "bot", text: "Something went wrong. Please try again." }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,7 +99,29 @@ function Chatbot() {
                   color: m.from === "user" ? "white" : "#333"
                 }}
               >
-                {m.text}
+                {/* Message text */}
+                <div>{m.text}</div>
+
+                {/* If the bot included an action route, show a small button */}
+                {m.from === "bot" && m.action?.route && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(m.action.route)}
+                    style={{
+                      marginTop: "0.6rem",
+                      width: "auto",
+                      padding: "0.4rem 0.8rem",
+                      borderRadius: "999px",
+                      border: "none",
+                      cursor: "pointer",
+                      backgroundColor: "#5bbddb",
+                      color: "white",
+                      fontSize: "0.85rem"
+                    }}
+                  >
+                    Go to Adherence
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -90,7 +134,7 @@ function Chatbot() {
         </div>
 
         {/* Input */}
-       <form
+        <form
           onSubmit={handleSend}
           style={{
             display: "flex",
@@ -119,15 +163,14 @@ function Chatbot() {
             type="submit"
             disabled={loading}
             style={{
-              width: "auto",          // ✅ stops the button taking 100% width
+              width: "auto",
               padding: "0.7rem 1.2rem",
-              whiteSpace: "nowrap"     // ✅ keeps it compact
+              whiteSpace: "nowrap"
             }}
           >
             Send
           </button>
         </form>
-
 
         <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#666" }}>
           Note: This chatbot provides app guidance only and is not medical advice.

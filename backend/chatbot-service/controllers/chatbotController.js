@@ -1,12 +1,81 @@
 // backend/chatbot-service/controllers/chatbotController.js
 // Core hybrid chatbot logic: rules first, then FAQ retrieval fallback
 
+const { parseSetReminderIntent, isLogTakenOrMissed } = require("../utils/agent");
+
 const faqs = require("../data/faq");
 const { includesAny, bestFaqMatch } = require("../utils/matchers");
+
+// Calls notification-service to create a reminder by using fetch
+async function createReminderViaNotificationService({ token, medicationId, medicationName, time }) {
+  const baseUrl = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:5003";
+
+  const response = await fetch(`${baseUrl}/api/notifications/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      medicationId,
+      medicationName,
+      time
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const msg = data?.message || `Notification service error (${response.status})`;
+    throw new Error(msg);
+  }
+
+  return data;
+}
 
 exports.chat = async (req, res) => {
   try {
     const { message } = req.body;
+
+    // 1) If user says "I took it" / "missed it" -> tell frontend to navigate
+    const logIntent = isLogTakenOrMissed(message);
+    if (logIntent) {
+    return res.status(200).json({
+        type: "NAVIGATE",
+        route: "/adherence",
+        message:
+        logIntent.type === "TAKEN"
+            ? "Open Adherence to log this dose as taken."
+            : "Open Adherence to log this dose as missed."
+    });
+    }
+
+    // 2) If user asks to set a reminder -> create it
+    const reminderIntent = parseSetReminderIntent(message);
+    if (reminderIntent) {
+    // If user didn’t provide a time, ask for it
+    if (reminderIntent.error === "NO_TIME") {
+        return res.status(200).json({
+        type: "TEXT",
+        message: "What time should I remind you? (Example: 8pm or 20:00)"
+        });
+    }
+
+    // If medication name isn't detected, ask user which medication
+    if (!reminderIntent.medicationName) {
+        return res.status(200).json({
+        type: "TEXT",
+        message:
+            "Which medication is this for? Please type: “Remind me to take <medication name> at <time>”."
+        });
+    }
+
+    return res.status(200).json({
+        type: "TEXT",
+        message:
+        `I can set reminders from your saved medications. Please set it in Medications → Reminders for ${reminderIntent.medicationName} at ${reminderIntent.time}.`
+    });
+    }
 
     // Validation
     if (!message) {
