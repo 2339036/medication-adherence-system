@@ -1,5 +1,5 @@
 // backend/chatbot-service/controllers/chatbotController.js
-// Core hybrid chatbot logic: rules first, then FAQ retrieval fallback
+// Core hybrid chatbot logic: rules first, then FAQ retrieval fallback and ai agent action handling (reminder creation). The agent logic is simple and based on regex parsing for demo purposes.
 
 const { parseSetReminderIntent, isLogTakenOrMissed } = require("../utils/agent");
 

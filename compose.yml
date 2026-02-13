@@ -44,7 +44,8 @@ services:
     env_file:
       - ./backend/chatbot-service/.env
     environment:
-     NOTIFICATION_SERVICE_URL: http://notification-service:5003
+      MEDICATION_SERVICE_URL: http://medication-service:5002
+      NOTIFICATION_SERVICE_URL: http://notification-service:5003
     restart: unless-stopped
 
 
