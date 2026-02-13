@@ -89,7 +89,7 @@ function AdherenceCharts({ history }) { //this receives the adherence history
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "1200px", marginTop: "0" }}>
+    <div style={{ width: "100%", maxWidth: "1200px", marginTop: "2.5rem" }}>
       <h3 style={{ textAlign: "center", marginBottom: "2rem" }}>
         Adherence Overview
       </h3>

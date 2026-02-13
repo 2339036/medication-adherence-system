@@ -2,9 +2,14 @@
 // Main dashboard shown after successful login
 
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import logo from "../assets/MediFlow-logo.png";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const displayName =
+    (user && (user.name || user.username)) || (user && user.email && user.email.split("@")[0]);
 
   // Handle logout
   const handleLogout = () => {
@@ -16,9 +21,15 @@ function Dashboard() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container dashboard-page">
       <div className="card">
-        <h2>Dashboard</h2>
+        <h2 className="card-title">Dashboard</h2>
+
+        {/* Logo and welcome message */}
+        <div className="dashboard-header">
+          <img src={logo} alt="MediFlow Logo" className="logo in-card-logo" />
+          <h2>Welcome Back, {displayName || "User"}</h2>
+        </div>
 
         {/* Welcome message */}
         <p style={{ textAlign: "center", marginBottom: "1.5rem" }}>

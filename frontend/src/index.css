@@ -85,6 +85,49 @@ body {
   color: #d61919;
 }
 
+/* Dashboard header logo*/
+.dashboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0; 
+  padding: 0; 
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 120px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+/* Dashboard-specific layout: pin content to top and make room for top logo */
+.dashboard-page {
+  flex-direction: column; /* stack vertically */
+  align-items: center;    /* center*/
+  justify-content: flex-start; /* keep content at top */
+  padding-top: 2.5rem;
+}
+
+.top-logo {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* Logo variant when shown inside the card */
+.in-card-logo {
+  max-height: 80px;
+  max-width: 180px;
+  margin-top: 0;
+  transform: translateY(-15px); /* lift slightly toward the Dashboard title */
+  display: block;
+}
+
 /* Dashboard action buttons layout */
 .dashboard-actions {
   display: flex;

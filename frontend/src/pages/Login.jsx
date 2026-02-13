@@ -26,7 +26,8 @@ function Login() {
     if (result.token) {
       localStorage.setItem("token", result.token); // Store token
       setMessage("Login successful");
-      login(result);           // store user globally
+      // store user object returned by backend (if present), otherwise fall back to whole result
+      login(result.user || result);
       navigate("/dashboard"); // redirect after login
     } else {
       setMessage(result.message || "Login failed");
