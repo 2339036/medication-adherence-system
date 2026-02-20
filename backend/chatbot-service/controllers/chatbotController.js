@@ -1,7 +1,7 @@
 // backend/chatbot-service/controllers/chatbotController.js
 // Core hybrid chatbot logic: rules first, then FAQ retrieval fallback and ai agent action handling (reminder creation). The agent logic is simple and based on regex parsing for demo purposes.
 
-const { parseSetReminderIntent, isLogTakenOrMissed } = require("../utils/agent");
+const { parseSetReminderIntent, isLogTakenOrMissed, isNextDoseIntent } = require("../utils/agent");
 
 const faqs = require("../data/faq");
 const { includesAny, bestFaqMatch } = require("../utils/matchers");
@@ -60,6 +60,50 @@ async function createReminderViaNotificationService({ token, medicationId, medic
   return data;
 }
 
+//fetch reminders for logged in user
+async function getUserReminders({ authHeader }) {
+  const baseUrl = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:5003";
+
+  const response = await fetch(`${baseUrl}/api/notifications`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authHeader
+    }
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const msg = data?.message || `Notification service error (${response.status})`;
+    throw new Error(msg);
+  }
+
+  return data;  //array of reminders
+}
+
+//fetch adherence history for logged in user
+async function getUserAdherenceHistory({ authHeader }) {
+  const baseUrl = process.env.ADHERENCE_SERVICE_URL || "http://localhost:5004";
+
+  const response = await fetch(`${baseUrl}/api/adherence`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authHeader
+    }
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const msg = data?.message || `Adherence service error (${response.status})`;
+    throw new Error(msg);
+  }
+
+  return data;  //array of adherence records
+}
+
 exports.chat = async (req, res) => {
   try {
     const { message } = req.body;
@@ -86,7 +130,7 @@ exports.chat = async (req, res) => {
       });
     }
 
-    // STEP 3: If user asks to set a reminder -> create it (agent action)
+    // If user asks to set a reminder -> create it (agent action)
     const reminderIntent = parseSetReminderIntent(message);
     if (reminderIntent) {
 
@@ -145,6 +189,77 @@ exports.chat = async (req, res) => {
         type: "NAVIGATE",
         route: "/medications",
         message: `Reminder created for ${matchedMed.name} at ${reminderIntent.time}.`
+      });
+    }
+
+    // If user asks about next dose, return a helpful message
+    if (isNextDoseIntent(message)) {
+      if (!token) {
+        return res.status(200).json({
+          type: "TEXT",
+          message:
+            "Please log in first so I can access your medication schedule securely."
+        });
+      }
+
+      const reminders = await getUserReminders({ authHeader });
+      if (!Array.isArray(reminders) || reminders.length === 0) {
+        return res.status(200).json({
+          type: "NAVIGATE",
+          route: "/medications",
+          message: "You have no reminders set. Go to Medications to add some!"
+        });
+      }
+      // Find the next upcoming reminder
+      const now = new Date();
+      const nowHHMM = now.toTimeString().slice(0, 5); // "HH:MM"
+
+      const sorted = [...reminders].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+
+      //first next reminder today or next toimorrow
+      let next = sorted.find((r) => String(r.time) > nowHHMM) || sorted[0];
+      let dayLabel = sorted.find((r) => String(r.time) > nowHHMM) ? "today" : "tomorrow";
+
+      //adherence
+      const byMed = {};
+      for (const r of sorted) {
+        if (!byMed[r.medicationId]) byMed[r.medicationId] = [];
+        byMed[r.medicationId].push(r);
+      }
+      Object.keys(byMed).forEach((medId) => {
+        byMed[medId].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+      });
+
+      const doseIndex = byMed[next.medicationId].findIndex((x) => x._id === next._id);
+
+      //get today adherence records
+      const history = await getUserAdherenceHistory({ authHeader });
+      const todayKey = new Date().toDateString();
+
+      const takenAlready = (history || []).some((rec) => {
+        const recDay = new Date(rec.date).toDateString();
+        return (
+          recDay === todayKey &&
+          String(rec.medicationId) === String(next.medicationId) &&
+          Number(rec.doseIndex) === Number(doseIndex) &&
+          rec.taken === true
+        );
+      });
+
+      if (takenAlready) {
+        //choose next one after this
+        const idx = sorted.findIndex((r) => r._id === next._id);
+        const alternative = sorted[idx + 1] || sorted[0];
+
+        return res.status(200).json({
+          type: "TEXT",
+          message: `Your next dose of ${next.medicationName} is at ${next.time} ${dayLabel}, but it looks like you’ve already logged it as taken. Your next upcoming dose after that is ${alternative.medicationName} at ${alternative.time}.`
+        });
+      }
+      
+      return res.status(200).json({
+        type: "TEXT",
+        message: `Your next dose is ${next.medicationName} at ${next.time} ${dayLabel}.`
       });
     }
 

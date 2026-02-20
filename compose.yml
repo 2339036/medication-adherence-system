@@ -46,6 +46,7 @@ services:
     environment:
       MEDICATION_SERVICE_URL: http://medication-service:5002
       NOTIFICATION_SERVICE_URL: http://notification-service:5003
+      ADHERENCE_SERVICE_URL: http://adherence-service:5004
     restart: unless-stopped
 
 

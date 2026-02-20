@@ -1,4 +1,4 @@
-// backend/chatbot-service/utils/agentIntents.js
+// backend/chatbot-service/utils/agent.js
 // Extracts user intent like "set reminder at 20:00" from natural language.
 
 function normalize(text) {
@@ -83,7 +83,26 @@ function parseSetReminderIntent(text) {
   };
 }
 
+function isNextDoseIntent(text) {
+  const t = normalize(text);
+  const patterns = [
+    "when is my next dose",
+    "next dose",
+    "next medication",
+    "when is my next",
+    "what time is my next",
+    "when do i take",
+    "when should i",
+    "what's my next dose",
+    "when should i take my next medication",
+    "when is my next medication due",
+    "when do i take my next medication"
+  ];
+  return patterns.some((p) => t.includes(p));
+}
+
 module.exports = {
   parseSetReminderIntent,
-  isLogTakenOrMissed
+  isLogTakenOrMissed,
+  isNextDoseIntent
 };
