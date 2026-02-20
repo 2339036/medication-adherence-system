@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getMedications, createMedication, deleteMedication, updateMedication } from "../services/medicationService";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { getReminders, createReminder, deleteReminder } from "../services/notificationService";
+import { getReminders, createReminder, deleteReminder, updateReminder } from "../services/notificationService";
 import BackButton from "../components/BackButton";
 import ReminderBanner from "../components/ReminderBanner";
 
@@ -59,14 +59,14 @@ const [reminderTime, setReminderTime] = useState("");
     setReminders(data);
   };
 
-  // Check reminders every minute and show notification if time matches
+  // Check reminders every second and show notification if time matches
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const nowTime = now.toTimeString().slice(0, 5); // HH:MM format
 
       reminders.forEach((reminder) => {
-        if (reminder.time === nowTime) {
+        if (reminder.time === nowTime && !reminder.sent) {
           if (Notification.permission === "granted") {
             navigator.serviceWorker.ready.then((reg) => {
               reg.showNotification("💊 Medication Reminder", {
@@ -75,9 +75,17 @@ const [reminderTime, setReminderTime] = useState("");
               });
             });
           }
+          // Update local state immediately to prevent duplicate notifications
+          setReminders((prevReminders) =>
+            prevReminders.map((r) =>
+              r._id === reminder._id ? { ...r, sent: true } : r
+            )
+          );
+          // Also update in database
+          updateReminder(reminder._id, { sent: true });
         }
       });
-    }, 60000); // check every 60 seconds
+    }, 1000); // check every 1 second for accuracy
 
     return () => clearInterval(interval);
   }, [reminders]);

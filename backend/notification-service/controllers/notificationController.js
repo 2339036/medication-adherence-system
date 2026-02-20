@@ -74,3 +74,39 @@ exports.deleteReminder = async (req, res) => {
   }
 };
 
+// UPDATE REMINDER
+exports.updateReminder = async (req, res) => {
+  try {
+    const reminderId = req.params.id;
+    const { sent } = req.body;
+
+    // Find reminder that belongs to the logged-in user
+    const reminder = await Reminder.findOne({
+      _id: reminderId,
+      userId: req.user.userId
+    });
+
+    if (!reminder) {
+      return res.status(404).json({
+        message: "Reminder not found"
+      });
+    }
+
+    // Update sent status if provided
+    if (sent !== undefined) {
+      reminder.sent = sent;
+    }
+
+    await reminder.save();
+
+    res.status(200).json({
+      message: "Reminder updated successfully",
+      reminder
+    });
+
+  } catch (error) {
+    console.error("Update reminder error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

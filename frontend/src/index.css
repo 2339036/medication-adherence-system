@@ -108,7 +108,7 @@ body {
 .dashboard-page {
   flex-direction: column; /* stack vertically */
   align-items: center;    /* center*/
-  justify-content: flex-start; /* keep content at top */
+  justify-content: center; /* center content vertically */
   padding-top: 2.5rem;
 }
 

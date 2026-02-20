@@ -70,3 +70,23 @@ export const deleteReminder = async (id) => {
     return { message: error.message };
   }
 };
+
+// Update a reminder by ID
+export const updateReminder = async (id, updates) => {
+  try {
+    const response = await fetch(`${BASE_URL}/${id}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updates)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating reminder:", error);
+    return { message: error.message };
+  }
+};

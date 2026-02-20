@@ -14,13 +14,14 @@ function ReminderBanner({ reminders }) {
       const dueReminder = reminders.find(
         (r) =>
           r.time === currentTime &&
-          !dismissedIds.includes(r._id)
+          !dismissedIds.includes(r._id) &&
+          !r.sent
       );
 
       if (dueReminder) {
         setActiveReminder(dueReminder);
       }
-    }, 30000); // every 30 seconds
+    }, 1000); // check every 1 second for accuracy
 
     return () => clearInterval(interval);
   }, [reminders, dismissedIds]);
