@@ -29,13 +29,14 @@ function Chatbot() {
     if (!trimmed) return;
 
     // Add user message to chat
-    setMessages((prev) => [...prev, { from: "user", text: trimmed }]);
+    const updatedMessages = [...messages, { from: "user", text: trimmed }];
+    setMessages(updatedMessages);
     setInput("");
     setLoading(true);
 
     try {
-      // Call chatbot backend
-      const result = await sendChatMessage(trimmed);
+      // Call chatbot backend with conversation history
+      const result = await sendChatMessage(trimmed, updatedMessages);
 
       const botText = result?.message || result?.reply || "Sorry, I didn’t understand that.";
 

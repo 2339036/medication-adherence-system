@@ -11,12 +11,12 @@ const getAuthHeaders = () => {
     };
 };
 
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (message, conversationHistory = []) => {
   try {
     const response = await fetch(`${CHATBOT_URL}/chat`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ message, conversationHistory })
     });
 
     return await response.json(); // { reply: "..." }

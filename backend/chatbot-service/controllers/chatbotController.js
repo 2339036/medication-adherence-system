@@ -1,7 +1,7 @@
 // backend/chatbot-service/controllers/chatbotController.js
 // Core hybrid chatbot logic: rules first, then FAQ retrieval fallback and ai agent action handling (reminder creation). The agent logic is simple and based on regex parsing for demo purposes.
 
-const { parseSetReminderIntent, isLogTakenOrMissed, isNextDoseIntent } = require("../utils/agent");
+const { parseSetReminderIntent, isLogTakenOrMissed, isNextDoseIntent, extractTime, extractMedicationName } = require("../utils/agent");
 
 const faqs = require("../data/faq");
 const { includesAny, bestFaqMatch } = require("../utils/matchers");
@@ -104,9 +104,35 @@ async function getUserAdherenceHistory({ authHeader }) {
   return data;  //array of adherence records
 }
 
+// Helper: detect if message is a question
+function isQuestion(text) {
+  return text.trim().endsWith("?");
+}
+
+// Helper: detect if message is an action request
+function isActionRequest(text) {
+  const t = text.toLowerCase().trim();
+  
+  // Don't treat questions as action requests
+  if (t.endsWith("?")) return false;
+  
+  // Must explicitly say "remind me", "set a reminder", "add a reminder", "create a reminder"
+  const actionPatterns = [
+    "remind me",
+    "set a reminder",
+    "set reminder",
+    "add a reminder",
+    "add reminder",
+    "create a reminder",
+    "create reminder"
+  ];
+  
+  return actionPatterns.some((pattern) => t.includes(pattern));
+}
+
 exports.chat = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, conversationHistory = [] } = req.body;
 
     // Validation
     if (!message) {
@@ -117,8 +143,71 @@ exports.chat = async (req, res) => {
     const authHeader = req.headers.authorization || "";
     const token = getTokenFromAuthHeader(authHeader);
 
+    // Find the last bot message to understand context
+    const lastBotMessage = [...conversationHistory]
+      .reverse()
+      .find((m) => m.from === "bot");
+
+    // Build contextual message based on conversation flow
+    let contextualMessage = message;
+    let shouldStayInReminderContext = true;
+    
+    // If last bot message asked "What time should I remind you?", current message might be just a time
+    if (
+      lastBotMessage &&
+      lastBotMessage.text.includes("What time should I remind you")
+    ) {
+      // Check if the user's actual message contains time indicators
+      const userTimeMatch = extractTime(message);
+      if (!userTimeMatch) {
+        // User didn't provide a time - they're trying to do something else
+        shouldStayInReminderContext = false;
+      } else {
+        // Find the original reminder request
+        const beforeBotQuestion = [...conversationHistory]
+          .reverse()
+          .filter((m) => m.from === "user")
+          .find(
+            (m) =>
+              m.text.includes("remind") ||
+              m.text.includes("reminder")
+          );
+
+        if (beforeBotQuestion) {
+          // Combine: original request + new time
+          contextualMessage = `${beforeBotQuestion.text} at ${message}`;
+        }
+      }
+    }
+
+    // If last bot message asked "Which medication is this for", current message might be just a medication
+    if (
+      lastBotMessage &&
+      lastBotMessage.text.includes("Which medication is this for")
+    ) {
+      // Find the time that was mentioned in previous user messages
+      let extractedTime = null;
+      for (const msg of conversationHistory) {
+        if (msg.from === "user") {
+          const timeMatch = extractTime(msg.text);
+          if (timeMatch) {
+            extractedTime = timeMatch.hhmm;
+            break;
+          }
+        }
+      }
+
+      if (extractedTime) {
+        // Combine: medication name + extracted time
+        contextualMessage = `remind me to take ${message} at ${extractedTime}`;
+      } else {
+        // No time found, user is trying to exit reminder context
+        shouldStayInReminderContext = false;
+      }
+    }
+
     // If user says "I took it" / "missed it" -> tell frontend to navigate
-    const logIntent = isLogTakenOrMissed(message);
+    const logIntent = isLogTakenOrMissed(contextualMessage);
     if (logIntent) {
       return res.status(200).json({
         type: "NAVIGATE",
@@ -130,9 +219,24 @@ exports.chat = async (req, res) => {
       });
     }
 
+    // Check if we're in a reminder follow-up context
+    const isInReminderContext = 
+      shouldStayInReminderContext &&
+      lastBotMessage &&
+      (lastBotMessage.text.includes("What time should I remind you") ||
+       lastBotMessage.text.includes("Which medication is this for"));
+
+    // If it's a question and NOT in reminder context, prioritize FAQ
+    if (isQuestion(contextualMessage) && !isInReminderContext) {
+      const faqMatch = bestFaqMatch(contextualMessage, faqs);
+      if (faqMatch) {
+        return res.status(200).json({ reply: faqMatch.a });
+      }
+    }
+
     // If user asks to set a reminder -> create it (agent action)
-    const reminderIntent = parseSetReminderIntent(message);
-    if (reminderIntent) {
+    const reminderIntent = parseSetReminderIntent(contextualMessage);
+    if (reminderIntent && (isInReminderContext || isActionRequest(contextualMessage))) {
 
       // If user didn’t provide a time, ask for it
       if (reminderIntent.error === "NO_TIME") {
@@ -193,7 +297,7 @@ exports.chat = async (req, res) => {
     }
 
     // If user asks about next dose, return a helpful message
-    if (isNextDoseIntent(message)) {
+    if (isNextDoseIntent(contextualMessage)) {
       if (!token) {
         return res.status(200).json({
           type: "TEXT",
@@ -263,14 +367,14 @@ exports.chat = async (req, res) => {
       });
     }
 
-    // FAQ RETRIEVAL first
-    const faqMatch = bestFaqMatch(message, faqs);
-    if (faqMatch) {
-      return res.status(200).json({ reply: faqMatch.a });
-    }
+    // FAQ RETRIEVAL (backup) - the smart FAQ check happens earlier if it's a question
+    // const faqMatch = bestFaqMatch(contextualMessage, faqs);
+    // if (faqMatch) {
+    //   return res.status(200).json({ reply: faqMatch.a });
+    // }
 
     // Greetings
-    if (includesAny(message, ["hi", "hello", "hey"])) {
+    if (includesAny(contextualMessage, ["hi", "hello", "hey"])) {
       return res.status(200).json({
         reply:
           "Hi! I can help you with reminders, adherence logging, and navigating the app. What do you need?"
@@ -278,7 +382,7 @@ exports.chat = async (req, res) => {
     }
 
     // Adherence logging
-    if (includesAny(message, ["log", "record", "taken", "missed", "adherence"])) {
+    if (includesAny(contextualMessage, ["log", "record", "taken", "missed", "adherence"])) {
       return res.status(200).json({
         reply:
           "To log a dose: go to the Adherence page → select a date → mark each dose as Taken or Missed."
@@ -287,17 +391,17 @@ exports.chat = async (req, res) => {
 
     // Reminder setup
     if (
-      includesAny(message, ["reminder", "reminders", "notify", "notification"])
+      includesAny(contextualMessage, ["reminder", "reminders", "notify", "notification"])
     ) {
       return res.status(200).json({
         reply:
-          "To set reminders: go to Medications → under each medication add reminder times. The number of reminders should match the frequency (e.g., twice daily = 2 reminders)."
+          "To set reminders: go to Medications → under each medication add reminder times. The number of reminders should match the frequency (e.g., twice daily = 2 reminders). You can also ask me to set reminders by typing: “Remind me"
       });
     }
 
     // Safety (medical advice boundary)
     if (
-      includesAny(message, ["chest pain", "cant breathe", "severe", "emergency"])
+      includesAny(contextualMessage, ["chest pain", "cant breathe", "severe", "emergency"])
     ) {
       return res.status(200).json({
         reply:
@@ -307,7 +411,7 @@ exports.chat = async (req, res) => {
     // DEFAULT
     return res.status(200).json({
       reply:
-        "I’m not sure I understood. Try asking about reminders, adherence logging, or how to use the app."
+        "I’m not sure I understood. I can help you set reminders, log doses, check next dose or answer FAQs."
     });
   } catch (error) {
     console.error("Chatbot error:", error);

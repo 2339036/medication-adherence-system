@@ -104,5 +104,7 @@ function isNextDoseIntent(text) {
 module.exports = {
   parseSetReminderIntent,
   isLogTakenOrMissed,
-  isNextDoseIntent
+  isNextDoseIntent,
+  extractTime,
+  extractMedicationName
 };
