@@ -108,7 +108,11 @@ function Register() {
        
 
         {/* Feedback message */}
-        {message && <p>{message}</p>}
+        {message && (
+          <div className="success-box">
+            {message}
+          </div>
+        )}
       </div>
     </div>
   );

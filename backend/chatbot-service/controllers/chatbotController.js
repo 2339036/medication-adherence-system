@@ -257,8 +257,8 @@ exports.chat = async (req, res) => {
 
       // Must be logged in to create reminders (token required)
       if (!token) {
-        return res.status(200).json({
-          type: "TEXT",
+        return res.status(401).json({
+          type: "ERROR",
           message:
             "Please log in first so I can access your medications and set reminders securely."
         });
@@ -274,8 +274,8 @@ exports.chat = async (req, res) => {
       );
 
       if (!matchedMed) {
-        return res.status(200).json({
-          type: "TEXT",
+        return res.status(404).json({
+          type: "ERROR",
           message: `I couldn’t find “${reminderIntent.medicationName}” in your saved medications. Please check the spelling on the Medications page.`
         });
       }
@@ -299,8 +299,8 @@ exports.chat = async (req, res) => {
     // If user asks about next dose, return a helpful message
     if (isNextDoseIntent(contextualMessage)) {
       if (!token) {
-        return res.status(200).json({
-          type: "TEXT",
+        return res.status(401).json({
+          type: "ERROR",
           message:
             "Please log in first so I can access your medication schedule securely."
         });
